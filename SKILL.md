@@ -63,7 +63,7 @@ def verify(secret: str, headers: dict, raw_body: bytes) -> bool:
 ```
 GET    /v1/watches/{watch_id}          state: status, fired, fire_count, next_check, last_state
 DELETE /v1/watches/{watch_id}          cancel (204)
-POST   /v1/checkin/{watch_id}          deadman check-in; no key needed, the id is the secret
+POST   /v1/checkin/{watch_id}          deadman check-in: Authorization: Bearer <signing_secret>  (or X-Ned-Checkin: hex(HMAC-SHA256(signing_secret, watch_id)))
 GET    /v1/balance                     balance_cents, free_used, burn_cents_per_day, days_left
 GET    /v1/pricing                     the numbers below, as JSON (public)
 POST   /v1/topup/5 | /20 | /50         x402: unpaid POST returns 402 + payment requirements (USDC, Base)
@@ -76,12 +76,14 @@ GET    /.well-known/agent-card.json    A2A agent card
 - **Paid, per day, from a prepaid balance:** http/tls 2¢ (>= 60s) · fast 7¢ (>= 30s) · deadman 1¢. Registering a paid watch needs a day of burn in the balance, else 402 with the numbers.
 - **Top up** $5 minimum via x402 (USDC on Base mainnet, `eip155:8453`): `POST /v1/topup/5` unpaid returns 402 with payment requirements; retry with `PAYMENT-SIGNATURE`. The credit lands on settlement. Card payments are coming.
 - Watches pause (event `paused`) when the balance can't cover the day; one `low_balance` callback while 3 days remain; a top-up resumes them (event `resumed`).
+- Targets and callbacks must be public addresses: loopback, link-local, private and CGNAT ranges are refused at registration and again at every check. Redirects are followed at most 3 hops, each re-checked.
+- Registration is rate-limited: 10/min per IP, 30/min per key (429 with Retry-After). Bodies over 32 KB are refused (413). At most 100 active watches per agent.
 - At most 5 watches per target across all agents. Watches on individuals or anything that looks like reconnaissance are refused. Ned is not a weapon.
 
 ## MCP
 
 `uvx ned-watch-mcp` runs a stdio MCP server exposing `watch_register`, `watch_get`, `watch_cancel`,
-`deadman_checkin`, `balance`. Pass your key as `NED_AGENT_KEY`. Config snippets: https://github.com/ned-mind/nedwatch#mcp-server
+`deadman_checkin` (takes the watch's signing_secret), `balance`, `pricing`. Pass your key as `NED_AGENT_KEY`. Config snippets: https://github.com/ned-mind/nedwatch#mcp-server
 
 ## Contact
 

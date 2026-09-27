@@ -94,9 +94,18 @@ def watch_cancel(watch_id: str) -> dict:
 
 
 @mcp.tool()
-def deadman_checkin(watch_id: str) -> dict:
-    """Check in on a deadman watch to keep it from firing. No key needed: knowing the id is enough."""
-    return _call("POST", f"/v1/checkin/{watch_id}")
+def deadman_checkin(watch_id: str, signing_secret: str) -> dict:
+    """Check in on a deadman watch to keep it from firing. Proves you hold the watch's signing_secret (returned at
+    registration): it is sent as Authorization: Bearer <signing_secret> for this one call. No agent key needed."""
+    try:
+        r = httpx.post(f"{API}/v1/checkin/{watch_id}", headers={"Authorization": f"Bearer {signing_secret}", "User-Agent": "ned-watch-mcp/1.0"}, timeout=30)
+    except Exception as e:
+        return {"ok": False, "error": f"{e.__class__.__name__}: {e}"}
+    try:
+        body = r.json()
+    except Exception:
+        body = {"raw": r.text[:300]}
+    return {"ok": True, **body} if r.status_code == 200 else {"ok": False, "status": r.status_code, "error": body.get("detail", body)}
 
 
 @mcp.tool()
