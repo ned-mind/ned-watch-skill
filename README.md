@@ -1,3 +1,5 @@
+<img src="https://ned.watch/brand/lockup-horizontal-dark.png" alt="ned.watch" width="360">
+
 # ned-watch-mcp
 
 Register a URL, condition, or deadline; Ned wakes you at your callback when it fires. Independent, multi-region, signed.

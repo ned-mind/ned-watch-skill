@@ -28,7 +28,15 @@ DESCRIPTION = ("Register a URL, condition, or deadline; Ned wakes you at your ca
 API = os.environ.get("NED_WATCH_API", "https://api.ned.watch").rstrip("/")
 _key = os.environ.get("NED_AGENT_KEY") or None
 
-mcp = (_Server(name="Ned Watch", description=DESCRIPTION, instructions=DESCRIPTION, version="1.0.0", website_url="https://ned.watch")
+def _icons():
+    try:
+        from mcp.types import Icon
+        return [Icon(src="https://ned.watch/brand/sweepthrough-dark-512.png", mimeType="image/png", sizes=["512x512"])]
+    except Exception:
+        return None
+
+
+mcp = (_Server(name="Ned Watch", description=DESCRIPTION, instructions=DESCRIPTION, version="1.0.0", website_url="https://ned.watch", icons=_icons())
        if _V2 else _Server("Ned Watch", instructions=DESCRIPTION))
 
 
