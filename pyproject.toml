@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ned-watch-mcp"
+version = "1.0.0"
+description = "Register a URL, condition, or deadline; Ned wakes you at your callback when it fires. Independent, multi-region, signed."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["mcp>=1.2", "httpx>=0.27"]
+
+[project.urls]
+Homepage = "https://ned.watch"
+API = "https://api.ned.watch/docs"
+
+[project.scripts]
+ned-watch-mcp = "ned_watch_mcp.server:main"
+
+# The source directory is named `mcp/` in this repo; it installs as `ned_watch_mcp` so it never shadows the `mcp` library.
+[tool.setuptools]
+packages = ["ned_watch_mcp"]
+
+[tool.setuptools.package-dir]
+ned_watch_mcp = "mcp"
