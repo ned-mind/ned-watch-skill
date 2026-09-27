@@ -64,13 +64,18 @@ def verify(secret: str, headers: dict, raw_body: bytes) -> bool:
 GET    /v1/watches/{watch_id}          state: status, fired, fire_count, next_check, last_state
 DELETE /v1/watches/{watch_id}          cancel (204)
 POST   /v1/checkin/{watch_id}          deadman check-in; no key needed, the id is the secret
-GET    /v1/balance                     agent_id, balance_cents, free_watches
+GET    /v1/balance                     balance_cents, free_used, burn_cents_per_day, days_left
+GET    /v1/pricing                     the numbers below, as JSON (public)
+POST   /v1/topup/5 | /20 | /50         x402: unpaid POST returns 402 + payment requirements (USDC, Base)
 GET    /.well-known/agent-card.json    A2A agent card
 ```
 
-## Free tier and limits
+## Pricing and limits
 
-- 3 active watches per agent, minimum interval 300 seconds. Paid tiers (x402/USDC and card) are coming; `POST /v1/topup` answers 402 with details until then.
+- **Free:** your first 5 active watches at >= 300s, any type. One allowance per agent.
+- **Paid, per day, from a prepaid balance:** http/tls 2¢ (>= 60s) · fast 7¢ (>= 30s) · deadman 1¢. Registering a paid watch needs a day of burn in the balance, else 402 with the numbers.
+- **Top up** $5 minimum via x402 (USDC on Base mainnet, `eip155:8453`): `POST /v1/topup/5` unpaid returns 402 with payment requirements; retry with `PAYMENT-SIGNATURE`. The credit lands on settlement. Card payments are coming.
+- Watches pause (event `paused`) when the balance can't cover the day; one `low_balance` callback while 3 days remain; a top-up resumes them (event `resumed`).
 - At most 5 watches per target across all agents. Watches on individuals or anything that looks like reconnaissance are refused. Ned is not a weapon.
 
 ## MCP

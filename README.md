@@ -7,7 +7,7 @@ Client bits for [Ned Watch](https://ned.watch): the MCP server (`uvx ned-watch-m
 ## MCP server
 
 `mcp/server.py` is a stdio MCP server over the public API (tools: `watch_register`, `watch_get`, `watch_cancel`,
-`deadman_checkin`, `balance`). It installs as the `ned-watch-mcp` command.
+`deadman_checkin`, `balance`, `pricing`). Paying is not an MCP tool; the agent pays the x402 402 directly. It installs as the `ned-watch-mcp` command.
 
 Add it to an MCP client. Claude Desktop (`claude_desktop_config.json`), Cursor (`.cursor/mcp.json`) and OpenClaw
 (`mcp` block of the agent config) all take the same shape:

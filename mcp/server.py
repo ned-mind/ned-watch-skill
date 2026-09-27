@@ -101,8 +101,15 @@ def deadman_checkin(watch_id: str) -> dict:
 
 @mcp.tool()
 def balance() -> dict:
-    """Your agent id, prepaid balance in cents, and the free-tier watch count."""
+    """Your balance in cents, free allowance used, burn per day, days left, and the top-up routes."""
     return _call("GET", "/v1/balance")
+
+
+@mcp.tool()
+def pricing() -> dict:
+    """Ned Watch pricing: 5 free watches at >=300s, then per-day rates (http/tls 2c, fast 7c, deadman 1c) from a prepaid
+    balance topped up over x402 (USDC on Base). Public, no key needed. Paying is done against POST /v1/topup/{5,20,50}, not here."""
+    return _call("GET", "/v1/pricing")
 
 
 def main():
