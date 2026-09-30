@@ -22,7 +22,8 @@ curl -s -X POST https://api.ned.watch/v1/watches \
   -d '{"type":"deadman","interval_s":3600,"callback_url":"https://your-agent.example/hooks/ned"}'
 ```
 
-Then, on your schedule (every run, every loop, every hour), one line:
+The response carries `watch_id` and `signing_secret` (and, on your first call, `agent_key`: store all three). Then, on
+your schedule (every run, every loop, every hour), one line:
 
 ```bash
 curl -s -X POST https://api.ned.watch/v1/checkin/$WATCH_ID -H "Authorization: Bearer $SIGNING_SECRET"
@@ -68,11 +69,14 @@ curl -s -X POST https://api.ned.watch/v1/watches/$WATCH_ID/finish -H "Authorizat
 - Not finished within `max_runtime_s`: one `fire` with `run_id`, `started_at`, `deadline`.
 - Finished after that: `clear` with `late: true` and `runtime_s`.
 - A new `start` while a run is open closes the old run as superseded, with no callback.
-- `finish` with no run open is a 409. Both calls take an optional `{"run_id": "..."}` (your own id, 1-64 chars).
+- `finish` with no run open is a 409. Both calls take an optional `{"run_id": "..."}` (your own id, 1-64 chars). Send one
+  and retries are safe: the same `start` again returns the open run, the same `finish` again returns its result.
 - Auth is the watch's signing secret, as a Bearer token, or signed: `X-Ned-Timestamp: <unix>` and
-  `X-Ned-Signature: hex(HMAC-SHA256(signing_secret, timestamp + "." + watch_id + "." + action))`, action `start` or
-  `finish`, within 300 s, each signature accepted once.
-- `condition.label` gives each job its own watch (registering the same thing twice returns the same watch).
+  `X-Ned-Signature: hex(HMAC-SHA256(signing_secret, timestamp + "." + watch_id + "." + action + "." + run_id))`, action
+  `start` or `finish`, run_id as in the body (empty if none), within 300 s, each signature accepted once. Signed calls go
+  to the node that registered the watch (api.ned.watch unless you used api-eu.ned.watch); Bearer works on either.
+- `condition.label` gives each job its own watch. Registering the same thing twice returns the same watch, so two jobs
+  with the same limit and callback need different labels.
 
 ## Content: 200, but wrong
 
@@ -143,10 +147,11 @@ GET    /.well-known/agent-card.json    A2A agent card
   requirements; retry with `PAYMENT-SIGNATURE`. The credit lands on settlement. Card payments are coming.
 - Watches pause (event `paused`) when the balance can't cover the day; one `low_balance` callback while 3 days remain; a
   top-up resumes them (event `resumed`).
+- Ports: 80, 443, or 1024 and up.
 - Targets and callbacks must be public addresses: loopback, link-local, private and CGNAT ranges are refused at
   registration and again at every connection (Ned connects only to the address he checked). Redirects are followed at
   most 3 hops, each re-checked.
-- Registration is rate-limited: 10/min per IP, 30/min per key (429 with Retry-After). Overrun start/finish: 60/min per
+- Registration is rate-limited: 10/min per IP, 30/min per key (429 with Retry-After). Overrun start/finish and deadman check-ins: 60/min per
   watch. Bodies over 32 KB are refused (413). At most 100 active watches per agent.
 - At most 5 watches per target across all agents. Watches on individuals or anything that looks like reconnaissance are
   refused. Ned is not a weapon.
@@ -156,7 +161,8 @@ GET    /.well-known/agent-card.json    A2A agent card
 Remote (no install): `https://api.ned.watch/mcp` (streamable HTTP). After your first `watch_register`, send your key as
 `Authorization: Bearer <agent_key>` on the connection.
 
-Local (stdio): `uvx ned-watch-mcp`, with your key as `NED_AGENT_KEY`.
+Local (stdio): `uvx ned-watch-mcp`, with your key as `NED_AGENT_KEY`. (The overrun and content tools are on the remote
+server now; the local package gets them in its next release, 1.1.0.)
 
 ```json
 {"mcpServers": {"ned-watch": {"command": "uvx", "args": ["ned-watch-mcp"], "env": {"NED_AGENT_KEY": "<agent_key>"}}}}

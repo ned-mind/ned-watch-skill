@@ -186,7 +186,8 @@ def _run(watch_id: str, signing_secret: str, action: str, run_id: str | None) ->
 @mcp.tool()
 def overrun_start(watch_id: str, signing_secret: str, run_id: str | None = None) -> dict:
     """A run began on an overrun watch. Returns run_id and deadline. Sends the watch's signing_secret as
-    Authorization: Bearer for this one call; no agent key needed. run_id is optional (your own id, 1-64 chars)."""
+    Authorization: Bearer for this one call; no agent key needed. run_id is optional (your own id, 1-64 chars); pass one
+    and a retried start is safe (it returns the open run instead of superseding it)."""
     return _run(watch_id, signing_secret, "start", run_id)
 
 
