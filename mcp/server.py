@@ -32,7 +32,7 @@ _key = os.environ.get("NED_AGENT_KEY") or None
 # Remote mode (remote.py, https://api.ned.watch/mcp): each HTTP request carries the caller's own key and IP; they ride here
 # for the length of that request and are passed straight to the API. Nothing is stored.
 REQUEST_HEADERS = contextvars.ContextVar("ned_mcp_request_headers", default=None)
-PASS_THROUGH = ("authorization", "cf-connecting-ip", "x-forwarded-for")
+PASS_THROUGH = ("authorization", "cf-connecting-ip", "x-forwarded-for", "x-ned-agent-key")
 
 def _icons():
     try:
@@ -50,7 +50,13 @@ def _headers():
     req = REQUEST_HEADERS.get()
     if req is not None:                                   # remote: the caller's key and IP, never ours
         h = {"User-Agent": "ned-watch-mcp-remote/1.0"}
-        h.update({k: req[k] for k in PASS_THROUGH if req.get(k)})
+        h.update({k: req[k] for k in PASS_THROUGH if req.get(k) and k != "x-ned-agent-key"})
+        key = (req.get("x-ned-agent-key") or "").strip()    # directories (Smithery) can forward a bare key as this header
+        if key and not h.get("authorization"):
+            h["authorization"] = f"Bearer {key}"
+        auth = h.get("authorization", "")
+        if auth and not auth.lower().startswith("bearer ") and auth.startswith("nw_"):
+            h["authorization"] = f"Bearer {auth}"            # a bare key in Authorization works too
         return h
     h = {"User-Agent": "ned-watch-mcp/1.0"}
     if _key:
