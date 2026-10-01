@@ -31,6 +31,10 @@ curl -s -X POST https://api.ned.watch/v1/checkin/$WATCH_ID -H "Authorization: Be
 
 Miss it and your callback gets a signed `fire`. Check in again and it gets a `clear`.
 
+In a GitHub Actions workflow, the check-in is one step at the end (overrun start/finish too):
+`uses: ned-mind/deadman-action@v1` with `watch-id` and `signing-secret` from your repo secrets.
+https://github.com/ned-mind/deadman-action
+
 ## Watch types
 
 | type      | fires when                                                                  | set with                              |
