@@ -159,10 +159,10 @@ GET    /.well-known/agent-card.json    A2A agent card
 ## MCP
 
 Remote (no install): `https://api.ned.watch/mcp` (streamable HTTP). After your first `watch_register`, send your key as
-`Authorization: Bearer <agent_key>` on the connection.
+`Authorization: Bearer <agent_key>` (or `X-Ned-Agent-Key: <agent_key>`) on the connection. Also on Smithery:
+https://smithery.ai/servers/ned-u4i1/ned
 
-Local (stdio): `uvx ned-watch-mcp`, with your key as `NED_AGENT_KEY`. (The overrun and content tools are on the remote
-server now; the local package gets them in its next release, 1.1.0.)
+Local (stdio): `uvx ned-watch-mcp` (1.1.0 and up has every tool below), with your key as `NED_AGENT_KEY`.
 
 ```json
 {"mcpServers": {"ned-watch": {"command": "uvx", "args": ["ned-watch-mcp"], "env": {"NED_AGENT_KEY": "<agent_key>"}}}}
